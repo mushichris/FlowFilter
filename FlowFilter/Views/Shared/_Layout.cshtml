@@ -1,0 +1,188 @@
+﻿@using System.Security.Claims
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>@ViewData["Title"] - FlowFilter</title>
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="~/layui/css/layui.css" media="all">
+    <style>
+        .layui-body {
+            overflow-y: scroll;
+        }
+    </style>
+</head>
+<body class="layui-layout-body">
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo">
+            <a href="/" style="left: 25px; top: 1px; position: absolute;">
+                <img src="~/images/logo.png" alt="网太科技" style="width: 150px; height: 42px; border: none; vertical-align: middle; display: inline-block">
+            </a>
+        </div>
+        @*<ul class="layui-nav layui-layout-left">
+            <li class="layui-nav-item"><a asp-area="" asp-controller="Home" asp-action="Index">通信过滤系统</a></li>
+            <li class="layui-nav-item"><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
+            <li class="layui-nav-item"><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+            <li class="layui-nav-item">
+                <a href="javascript:;">其它系统</a>
+                <dl class="layui-nav-child">
+                    <dd><a href="">邮件管理</a></dd>
+                    <dd><a href="">消息管理</a></dd>
+                    <dd><a href="">授权管理</a></dd>
+                </dl>
+            </li>
+        </ul>*@
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item">
+                <a href="javascript:;">
+                    @*<i class="layui-icon layui-icon-face-smile"></i>*@
+                    @*<img src="http://t.cn/RCzsdCq" class="layui-nav-img">*@
+                    @User.Claims.FirstOrDefault(s => s.Type == ClaimTypes.Name)?.Value
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a id="changeOwnPasswordBtn" href="javascript:;">修改密码</a></dd>
+                    @*<dd><a href="">安全设置</a></dd>*@
+                </dl>
+            </li>
+            <li class="layui-nav-item"><a href="/Login/Logout">退出</a></li>
+        </ul>
+    </div>
+
+    <div class="layui-side layui-bg-black">
+        <div class="layui-side-scroll">
+            <!-- 左侧导航区域（可配合layui已有的垂直导航） -->
+            <ul class="layui-nav layui-nav-tree">
+                <li class="layui-nav-item"><a href="/">首页</a></li>
+                <li class="layui-nav-item layui-nav-itemed" id="RuleManage">
+                    <a class="" href="javascript:;">规则管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/AppRule">规则配置</a></dd>
+                        <dd><a href="/AppRule/PcapDownload">转储包下载</a></dd>
+                        @*<dd><a href="javascript:;">乱七八糟</a></dd>*@
+                    </dl>
+                </li>
+                <li class="layui-nav-item" id="LogManage">
+                    <a href="javascript:;">日志监控</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/Log/BusinessLog">业务日志</a></dd>
+                        <dd><a href="/Log/BusinessStatistics">业务信息统计</a></dd>
+                        <dd><a href="/Log/SystemLog">系统运行监控</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item" id="UserManage">
+                    <a href="javascript:;">用户权限管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="/UserInfo/UserList">用户管理</a></dd>
+                        <dd><a href="/UserInfo/AccessList">权限管理</a></dd>
+                    </dl>
+                </li>
+                @*<li class="layui-nav-item"><a href="javascript:;">还有啥</a></li>*@
+            </ul>
+        </div>
+    </div>
+
+    <div class="layui-body">
+        <!-- 内容主体区域 -->
+        <div style="padding: 15px;">
+            @RenderBody()
+        </div>
+    </div>
+
+    <div class="layui-footer">
+        <!-- 底部固定区域 -->
+        &copy; 2018 - FlowFilter
+    </div>
+</div>
+<div id="layerPageChangePassword" style="display: none;">
+    <div style="padding: 50px; line-height: 22px; background-color: #393D49;  font-weight: 300; overflow:visible">
+        <form class="layui-form" lay-filter="changeOwnPassword">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">原密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="oldPassword" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">新密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="newPassword1" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">确认新密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="newPassword2" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/layui/layui.js"></script>
+    <script>
+        layui.use(['element', 'form', 'layer'], function() {
+            var element = layui.element,
+                form = layui.form,
+                layer = layui.layer;
+            $("#changeOwnPasswordBtn").click(function() {
+                layer.open({
+                    type: 1,
+                    title: false,
+                    closeBtn: true,
+                    area: '300px',
+                    scrollbar: false,
+                    shade: 0.8,
+                    id: 'LAY_ChangeOwnPassword',
+                    btn: ['确定'],
+                    btnAlign: 'c',
+                    moveType: 1,
+                    content: $("#layerPageChangePassword").html(),
+                    success: function (layero, index) {
+                        layero.find("#LAY_ChangeOwnPassword").attr("style", "overflow:visible");
+                    },
+                    yes: function (index, layero) {
+                        var oldPassword = layero.find("input[name='oldPassword']").val();
+                        var newPassword1 = layero.find("input[name='newPassword1']").val();
+                        var newPassword2 = layero.find("input[name='newPassword2']").val();
+                        if (oldPassword.length == 0) {
+                            layer.alert("原密码不能为空");
+                            return;
+                        }
+                        if (newPassword1 !== newPassword2) {
+                            layer.alert("两次输入新密码不一致");
+                            return;
+                        }
+                        $.post("/UserInfo/ChangeOwnPassword",
+                            {
+                                oldPassword: oldPassword,
+                                newPassword: newPassword1
+                            },
+                            function(retStr) {
+                                if (retStr == "error") {
+                                    layer.alert("原密码错误");
+                                    return;
+                                }
+                                if (retStr == "Ok") {
+                                    layer.msg("密码修改成功");
+                                    layer.close(index);
+                                    return;
+                                }
+                            }).fail(function () {
+                            layer.alert("操作失败");
+                            return;
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

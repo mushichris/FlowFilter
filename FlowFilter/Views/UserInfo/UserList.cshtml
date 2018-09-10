@@ -1,0 +1,298 @@
+﻿
+@{
+    ViewData["Title"] = "用户管理";
+}
+
+<span class="layui-breadcrumb">
+    <a href="/">首页</a>
+    <a>用户权限管理</a>
+    <a><cite>用户管理</cite></a>
+</span>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;"></fieldset>
+
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>用户管理</legend>
+</fieldset>
+
+<div class="layui-btn-group">
+    <button class="layui-btn" id="addUser">添加新用户</button>
+</div>
+
+<table id="userList" lay-filter="userList"></table>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-xs" lay-event="edit">修改信息</a>
+    <a class="layui-btn layui-btn-xs" lay-event="changePwd">修改密码</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<div id="layerPageChangeUserPassword" style="display: none;">
+    <div style="padding: 50px; line-height: 22px; background-color: #393D49;  font-weight: 300; overflow:visible">
+        <form class="layui-form" lay-filter="changeUserPassword">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">新密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="newPassword1" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">确认新密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="newPassword2" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="layerPageEditUserInfo" style="display: none;">
+    <div style="padding: 50px; line-height: 22px; background-color: #393D49;  font-weight: 300; overflow:visible">
+        <form class="layui-form" lay-filter="editUserInfo">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">用户名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="username" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">备注</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="tag" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div id="layerPageAddUser" style="display: none;">
+    <div style="padding: 50px; line-height: 22px; background-color: #393D49;  font-weight: 300; overflow:visible">
+        <form class="layui-form" lay-filter="addUser">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">用户名</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="username" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="newPassword1" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">确认密码</label>
+                <div class="layui-input-inline">
+                    <input type="password" name="newPassword2" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">备注</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="tag" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item" style="width: 200px">
+                <div class="layui-input-inline">
+                    <label class="layui-form-label" style="color: #ffffff; width: 90px">授予全部权限</label>
+                    <input type="checkbox" name="allAccess" lay-skin="switch" lay-text="ON|OFF">
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $("li").removeClass("layui-nav-itemed");
+        $("#UserManage").addClass("layui-nav-itemed");
+        layui.use(['layer', 'form', 'table'],
+            function() {
+                var layer = layui.layer, form = layui.form, table = layui.table;
+                table.render({
+                    elem: '#userList'
+                    , height: 315
+                    , url: '/UserInfo/GetUserList/' //数据接口
+                    , page: true //开启分页
+                    , limits: [10, 20, 30, 40, 50, 60, 70, 80, 90]
+                    , cols: [[ //表头
+                        { field: 'Id', title: '用户ID', sort: true, width: 80 }
+                        , { field: 'Name', title: '用户名', sort: true }
+                        , { field: 'CreateTime', title: '创建时间', sort: true }
+                        , { field: 'LastLoginTime', title: '最后登录时间', sort: true }
+                        , { field: 'Tag', title: '备注', sort: true }
+                        , { title: '操作', fixed: 'right', width: 250, align: 'center', toolbar:'#barDemo'}
+                    ]]
+                });
+
+                $("#addUser").click(function() {
+                    layer.open({
+                        type: 1,
+                        title: false,
+                        closeBtn: true,
+                        area: '300px',
+                        scrollbar: false,
+                        shade: 0.8,
+                        id: 'LAY_AddUser',
+                        btn: ['确定'],
+                        btnAlign: 'c',
+                        moveType: 1,
+                        content: $("#layerPageAddUser").html(),
+                        success: function(layero, index) {
+                            form.render(null, "addUser");
+                        },
+                        yes: function (index, layero) {
+                            form.render(null, "addUser");
+                            var username = layero.find("input[name='username']").val();
+                            var tag = layero.find("input[name='tag']").val();
+                            var newPassword1 = layero.find("input[name='newPassword1']").val();
+                            var newPassword2 = layero.find("input[name='newPassword2']").val();
+                            var allAccess = layero.find("input[name='allAccess']").val() == "on" ? true : false;
+                            if (newPassword1.length == 0 || newPassword2.length == 0 || username.length == 0) {
+                                layer.alert("输入信息不能为空");
+                                return;
+                            }
+                            if (newPassword1 !== newPassword2) {
+                                layer.alert("两次输入新密码不一致");
+                                return;
+                            }
+                            $.post("/UserInfo/AddUser",
+                                {
+                                    username: username,
+                                    tag: tag,
+                                    password: newPassword1,
+                                    allAccess: allAccess
+                                },
+                                function (retStr) {
+                                    if (retStr == "Ok") {
+                                        layer.msg("添加用户成功");
+                                        table.reload("userList",
+                                            {
+                                                url: '/UserInfo/GetUserList/'
+                                            });
+                                        layer.close(index);
+                                        return;
+                                    }
+                                }).fail(function () {
+                                    layer.alert("操作失败");
+                                    return;
+                                });
+                        }
+                    });
+                });
+
+                table.on('tool(userList)', function(obj){
+                    var data = obj.data;
+                    if (obj.event === 'changePwd') {
+                        layer.open({
+                            type: 1,
+                            title: false,
+                            closeBtn: true,
+                            area: '300px',
+                            scrollbar: false,
+                            shade: 0.8,
+                            id: 'LAY_ChangeUserPassword',
+                            btn: ['确定'],
+                            btnAlign: 'c',
+                            moveType: 1,
+                            content: $("#layerPageChangeUserPassword").html(),
+                            yes: function (index, layero) {
+                                var newPassword1 = layero.find("input[name='newPassword1']").val();
+                                var newPassword2 = layero.find("input[name='newPassword2']").val();
+                                if (newPassword1.length == 0 || newPassword2.length == 0) {
+                                    layer.alert("输入信息不能为空");
+                                    return;
+                                }
+                                if (newPassword1 !== newPassword2) {
+                                    layer.alert("两次输入新密码不一致");
+                                    return;
+                                }
+                                $.post("/UserInfo/ChangeUserPassword",
+                                    {
+                                        userId: data.Id,
+                                        newPassword: newPassword1
+                                    },
+                                    function (retStr) {
+                                        if (retStr == "target error") {
+                                            layer.alert("该用户不存在");
+                                            return;
+                                        }
+                                        if (retStr == "Ok") {
+                                            layer.msg("密码修改成功");
+                                            layer.close(index);
+                                            return;
+                                        }
+                                    }).fail(function () {
+                                        layer.alert("操作失败");
+                                        return;
+                                    });
+                            }
+                        });
+                    } else if (obj.event === 'edit') {
+                        layer.open({
+                            type: 1,
+                            title: false,
+                            closeBtn: true,
+                            area: '300px',
+                            scrollbar: false,
+                            shade: 0.8,
+                            id: 'LAY_EditUserInfo',
+                            btn: ['确定'],
+                            btnAlign: 'c',
+                            moveType: 1,
+                            content: $("#layerPageEditUserInfo").html(),
+                            success: function(layero, index) {
+                                layero.find("input[name='username']").val(data.Name);
+                                layero.find("input[name='tag']").val(data.Tag);
+                            },
+                            yes: function (index, layero) {
+                                var username = layero.find("input[name='username']").val();
+                                var tag = layero.find("input[name='tag']").val();
+                                if (username.length == 0 || tag.length == 0) {
+                                    layer.alert("输入信息不能为空");
+                                    return;
+                                }
+                                $.post("/UserInfo/ChangeUserInfo",
+                                    {
+                                        userId: data.Id,
+                                        username: username,
+                                        tag: tag
+                                    },
+                                    function (retStr) {
+                                        if (retStr == "target error") {
+                                            layer.alert("该用户不存在");
+                                            return;
+                                        }
+                                        if (retStr == "Ok") {
+                                            layer.msg("信息修改成功");
+                                            table.reload("userList",
+                                                {
+                                                    url: '/UserInfo/GetUserList/'
+                                                });
+                                            layer.close(index);
+                                            return;
+                                        }
+                                    }).fail(function () {
+                                        layer.alert("操作失败");
+                                        return;
+                                    });
+                            }
+                        });
+                    } else if(obj.event === 'del'){
+                        layer.confirm('真的删除用户' + data.Name + '么?', function (index) {
+                            $.post("/UserInfo/DeleteUser",
+                                {
+                                    userId: data.Id
+                                },
+                                function(delUserRet) {
+                                    obj.del();
+                                }).always(function() {
+                                layer.close(index);
+                            });
+                        });
+                    } 
+                });
+            });
+    </script>
+}

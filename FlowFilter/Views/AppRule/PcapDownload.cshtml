@@ -1,0 +1,78 @@
+﻿
+@{
+    ViewData["Title"] = "转储包下载";
+}
+
+<span class="layui-breadcrumb">
+    <a href="/">首页</a>
+    <a>规则管理</a>
+    <a><cite>转储包下载</cite></a>
+</span>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;"></fieldset>
+
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>转储包下载</legend>
+</fieldset>
+
+<table id="pcapFileList" lay-filter="pcapFileList"></table>
+
+<script type="text/html" id="barDemo">
+    <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">下载</a>
+</script>
+
+@section Scripts
+    {
+    <script>
+        function myPost(url,args){
+            var body = $(document.body),
+                form = $("<form method='post'></form>"),
+                input;
+            form.attr({"action":url});
+            $.each(args,function(key,value){
+                input = $("<input type='hidden'>");
+                input.attr({"name":key});
+                input.val(value);
+                form.append(input);
+            });
+
+            form.appendTo(document.body);
+            form.submit();
+            document.body.removeChild(form[0]);
+        }
+        $("li").removeClass("layui-nav-itemed");
+        $("#RuleManage").addClass("layui-nav-itemed");
+        layui.use(['layer', 'form', 'table'],
+            function() {
+                var layer = layui.layer, form = layui.form, table = layui.table;
+                table.render({
+                    elem: '#pcapFileList'
+                    , height: 315
+                    , url: '/AppRule/GetPcapList/' //数据接口
+                    , page: true //开启分页
+                    , limits: [10, 20, 30, 40, 50, 60, 70, 80, 90]
+                    , cols: [[ //表头
+                        { field: 'Name', title: '文件名', sort: true }
+                        , { field: 'Length', title: '文件大小', sort: true }
+                        , { field: 'CreationTime', title: '创建时间', sort: true }
+                        , { field: 'LastWriteTime', title: '修改时间', sort: true }
+                        , { field: 'FullName', title: '文件路径', width:10 }
+                        , { title: '操作', fixed: 'right', width: 180, align: 'center', toolbar:'#barDemo'}
+                    ]]
+                    , done: function (res, curr, count) {
+                        $("[data-field='FullName']").css('display', 'none');
+                        //console.log(res);
+                    }
+                });
+                table.on('tool(pcapFileList)', function(obj){
+                    var data = obj.data;
+                    if (obj.event === 'detail') {
+                        myPost("/AppRule/GetFile",
+                            {
+                                filePath: data.FullName
+                            });
+                    }
+                });
+            });
+    </script>
+}

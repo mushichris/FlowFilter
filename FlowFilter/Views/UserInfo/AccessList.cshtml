@@ -1,0 +1,98 @@
+﻿
+@{
+    ViewData["Title"] = "权限管理";
+}
+
+<span class="layui-breadcrumb">
+    <a href="/">首页</a>
+    <a>用户权限管理</a>
+    <a><cite>权限管理</cite></a>
+</span>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;"></fieldset>
+
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>权限管理</legend>
+</fieldset>
+
+<div class="layui-btn-group">
+    <button class="layui-btn" id="addAllAccessToSeletedUser">授权所选用户全部权限</button>
+</div>
+
+<table id="accessList" lay-filter="accessList"></table>
+
+<script type="text/html" id="switchTplHome">
+    <input type="checkbox" name="Home" value="{{d.Id}}" lay-skin="switch" lay-text="ON|OFF" lay-filter="AccessSwitch" {{ d.Home == true ? 'checked' : '' }}>
+</script>
+<script type="text/html" id="switchTplAppRule">
+    <input type="checkbox" name="AppRule" value="{{d.Id}}" lay-skin="switch" lay-text="ON|OFF" lay-filter="AccessSwitch" {{ d.AppRule == true ? 'checked' : '' }}>
+</script>
+<script type="text/html" id="switchTplLog">
+    <input type="checkbox" name="Log" value="{{d.Id}}" lay-skin="switch" lay-text="ON|OFF" lay-filter="AccessSwitch" {{ d.Log == true ? 'checked' : '' }}>
+</script>
+<script type="text/html" id="switchTplUserInfo">
+    <input type="checkbox" name="UserInfo" value="{{d.Id}}" lay-skin="switch" lay-text="ON|OFF" lay-filter="AccessSwitch" {{ d.UserInfo == true ? 'checked' : '' }}>
+</script>
+
+@section Scripts
+{
+    <script>
+        $("li").removeClass("layui-nav-itemed");
+        $("#UserManage").addClass("layui-nav-itemed");
+        layui.use(['layer', 'form', 'table'],
+            function() {
+                var layer = layui.layer, form = layui.form, table = layui.table;
+                table.render({
+                    elem: '#accessList'
+                    , height: 315
+                    , url: '/UserInfo/GetAccessList/' //数据接口
+                    , page: true //开启分页
+                    , limits: [10, 20, 30, 40, 50, 60, 70, 80, 90]
+                    , cols: [[ //表头
+                        { type: 'checkbox', fixed: 'left' }
+                        , { field: 'Id', title: '用户ID', sort: true, width: 80 }
+                        , { field: 'Name', title: '用户名', sort: true }
+                        , { field: 'Home', title: '首页', templet: '#switchTplHome', unresize: true }
+                        , { field: 'AppRule', title: '规则管理', templet: '#switchTplAppRule', unresize: true }
+                        , { field: 'Log', title: '日志监控', templet: '#switchTplLog', unresize: true }
+                        , { field: 'UserInfo', title: '用户权限管理', templet: '#switchTplUserInfo', unresize: true }
+                    ]]
+                });
+
+                form.on('switch(AccessSwitch)', function (obj) {
+                    $.post("/UserInfo/SetAccess",
+                        {
+                            userId: this.value,
+                            access: this.name,
+                            on: this.checked
+                        }, function (retStr) {
+                            if (retStr == "target error") {
+                                layer.alert("该用户不存在");
+                                return;
+                            }
+                        }).fail(function() {
+                        layer.alert("授权失败");
+                    });
+                    //layer.tips(this.value + ' ' + this.name + '：'+ obj.elem.checked, obj.othis);
+                });
+
+                $("#addAllAccessToSeletedUser").click(function() {
+                    var checkStatus = table.checkStatus('accessList')
+                        , data = checkStatus.data;
+                    console.log(data);
+                    $.post("/UserInfo/AddAllAccessToSelectedUser",
+                        {
+                            userIdList: data
+                        },
+                        function() {
+                            table.reload("accessList",
+                                {
+                                    url: '/UserInfo/GetAccessList/'
+                                });
+                        }).fail(function() {
+                        layer.alert("授权失败");
+                    });
+                });
+            });
+    </script>
+}

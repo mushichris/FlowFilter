@@ -1,0 +1,489 @@
+﻿@model FlowFilter.Models.AppRule
+@{
+    ViewData["Title"] = "规则配置";
+}
+<span class="layui-breadcrumb">
+    <a href="/">首页</a>
+    <a>规则管理</a>
+    <a href="/@ViewContext.RouteData.Values["controller"]/">规则配置</a>
+    <a><cite>规则编辑</cite></a>
+</span>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;"></fieldset>
+
+
+
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>选择过滤字段及条件 - @Model.PacketType.ToString() 包</legend>
+</fieldset>
+<form class="layui-form" lay-filter="selectOperation">
+    <input type="hidden" name="AppRuleId" value="@Model.Id">
+    <input type="hidden" name="PacketType" value="@((int) Model.PacketType)" id="PacketType">
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">字段类型</label>
+        <div class="layui-input-inline" style="width: 350px">
+            <select name="Field" @*lay-filter="selectOperationField"*@ lay-search="" id="selectOperationField">
+                <option value="">请选择字段</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">比较条件</label>
+        <div class="layui-input-inline">
+            <select name="Type">
+                <option value="">请选择条件</option>
+                <option value="0">&gt;</option>
+                <option value="1">&lt;</option>
+                <option value="2">=</option>
+                <option value="3">&gt;=</option>
+                <option value="4">&lt;=</option>
+                <option value="5">MASK</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">条件值</label>
+        <div class="layui-input-inline">
+            <input id="operationPara" type="text" name="Para" lay-verify="required|number" autocomplete="off" class="layui-input" placeholder="请输入条件值">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit="" lay-filter="addOperation">添加</button>
+        </div>
+    </div>
+</form>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>已配置条件</legend>
+</fieldset>
+<table id="operationList" lay-filter="operationList"></table>
+<fieldset class="layui-elem-field layui-field-title" style="margin-top: 20px;">
+    <legend>请选择动作</legend>
+</fieldset>
+<form class="layui-form" lay-filter="selectAction">
+    <input type="hidden" name="AppRuleId" value="@Model.Id">
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否转储</label>
+        <div class="layui-input-inline">
+            <input type="checkbox" name="dump" title="转储数据包" lay-filter="dump" @(Model.Dump ? "checked" : "") >
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否丢弃</label>
+        <div class="layui-input-inline">
+            <input type="checkbox" name="drop" lay-skin="switch" lay-filter="drop" @(Model.Drop ? "checked" : "") lay-text="丢&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;弃|修改后转发">
+        </div>
+    </div>
+    @*<div class="layui-form-item">
+            <label class="layui-form-label">动作类型</label>
+            <div class="layui-input-inline">
+                <select name="Type" id="selectActionType" lay-filter="selectActionType">
+                    <option value="">请选择动作类型</option>
+                    <option value="0">丢弃</option>
+                    <option value="1">修改后转发</option>
+                    <option value="2">转储PCAP数据包</option>
+                </select>
+            </div>
+        </div>*@
+    <input type="hidden" name="Type" value="1">
+    <div class="layui-form-item actionField" id="selectActionField">
+        <label class="layui-form-label">修改字段</label>
+        <div class="layui-input-inline" style="width: 350px">
+            <select name="Field" lay-search="">
+                <option value="">请选择字段</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item actionField" id="actionPara">
+        <label class="layui-form-label">修改值</label>
+        <div class="layui-input-inline">
+            <input type="text" name="Para" autocomplete="off" class="layui-input" placeholder="请输入修改值" />
+        </div>
+    </div>
+    <div class="layui-form-item actionField">
+        <div class="layui-input-block">
+            <button class="layui-btn" lay-submit="" lay-filter="addAction">添加</button>
+        </div>
+    </div>
+</form>
+<fieldset class="layui-elem-field layui-field-title actionField" style="margin-top: 20px">
+    <legend>已配置修改动作</legend>
+</fieldset>
+<div class="actionField">
+    <table id="actionList" lay-filter="actionList"></table>
+</div>
+
+<script type="text/html" id="barDemo">
+    @*<a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>*@
+    <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+    <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<div id="layerPageEditOperation" style="display: none;">
+    <div style="padding: 50px; line-height: 22px; background-color: #393D49;  font-weight: 300; overflow:visible">
+        <form class="layui-form" lay-filter="layerPageEditOperation">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">ID</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="Id" class="layui-input" disabled="disabled"/>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">字段</label>
+                <div class="layui-input-inline">
+                    <select name="Field" lay-search="" >
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">比较条件</label>
+                <div class="layui-input-inline">
+                    <select name="Type">
+                        <option value="">请选择条件</option>
+                        <option value="0">&gt;</option>
+                        <option value="1">&lt;</option>
+                        <option value="2">=</option>
+                        <option value="3">&gt;=</option>
+                        <option value="4">&lt;=</option>
+                        <option value="5">MASK</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">条件值</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="Para" lay-verify="required|number" autocomplete="off" class="layui-input" placeholder="请输入条件值" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+<div id="layerPageEditAction" style="display: none;">
+    <div style="padding: 50px; line-height: 22px; background-color: #393D49;  font-weight: 300; overflow:visible">
+        <form class="layui-form" lay-filter="layerPageEditAction">
+            <div class="layui-form-item">
+                <label class="layui-form-label" style="color: #ffffff">ID</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="Id" class="layui-input" disabled="disabled" />
+                </div>
+            </div>
+            <div class="layui-form-item" style="display: none;">
+                <label class="layui-form-label" style="color: #ffffff">动作类型</label>
+                <div class="layui-input-inline">
+                    <select name="Type" lay-filter="layerPageSelectActionType" disabled="disabled" >
+                        <option value="0">修改后转发</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-form-item" id="layerPageSelectActionField">
+                <label class="layui-form-label" style="color: #ffffff">字段名</label>
+                <div class="layui-input-inline">
+                    <select name="Field" lay-search=""></select>
+                </div>
+            </div>
+            <div class="layui-form-item" id="layerPageSelectActionPara">
+                <label class="layui-form-label" style="color: #ffffff">修改值</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="Para" lay-verify="required|number" autocomplete="off" class="layui-input" placeholder="请输入条件值" />
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts
+{
+    <script>
+        $("li").removeClass("layui-nav-itemed");
+        $("#RuleManage").addClass("layui-nav-itemed");
+        function escape2Html(str) {
+            var arrEntities={'lt':'<','gt':'>','nbsp':' ','amp':'&','quot':'"'};
+            return str.replace(/&(lt|gt|nbsp|amp|quot);/ig,function(all,t){return arrEntities[t];});
+        }
+        function html2Escape(sHtml) {
+            return sHtml.replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});
+        }
+        layui.use(['layer', 'form', 'table'], function () {
+            var layer = layui.layer
+                , form = layui.form
+                , table = layui.table;
+
+            layer.msg('编辑规则:@Model.Id');
+
+            if (@(Model.Drop.ToString().ToLower()) == true) {
+                
+                $(".actionField").fadeOut();
+                form.render(null, "selectAction");
+            }
+
+            $.getJSON("/api/EnumInfoApi/GetField",
+                {
+                    packetType: $("#PacketType").val()
+                },
+                function (json) {
+                    $("select[name='Field']").each(function (idy, itemy) {
+                        $(itemy).empty();
+                        $(itemy).append("<option value=''>" + "请选择字段" + "</option>");
+                    });
+                    $.each(json,
+                        function (idx, item) {
+                            $("select[name='Field']").each(function (idy, itemy) {
+                                $(itemy).append('<option value=' + item.value + '>' + item.name + '</option>');
+                            });
+                        });
+                    form.render('select', "selectOperation");
+                    form.render('select', "selectAction");
+                });
+
+            form.on('checkbox(dump)', function (data) {
+                $.post("/AppRule/SetDump",
+                    {
+                        ruleId: @Model.Id,
+                        dump: data.elem.checked
+                    });
+            });
+
+            form.on('switch(drop)', function (data) {
+                $.post("/AppRule/SetDrop",
+                    {
+                        ruleId: @Model.Id,
+                        drop: data.elem.checked
+                    }).done(function() {
+                    if (data.elem.checked == false) {
+                        $(".actionField").fadeIn();
+                        form.render(null, "selectAction");
+                    } else {
+                        $(".actionField").fadeOut();
+                        form.render(null, "selectAction");
+                    }
+                });
+            });
+
+            //监听提交
+            form.on('submit(addOperation)', function (data) {
+                $.post("/AppRule/AddOperation",
+                    data.field,
+                    function (data, status) {
+                        table.reload("operationList",
+                            {
+                                url: "/AppRule/GetOperationList/@Model.Id/"
+                            });
+                    });
+                return false;
+            });
+
+            //监听提交
+            form.on('submit(addAction)', function (data) {
+                $.post("/AppRule/AddAction",
+                    data.field,
+                    function(data, status) {
+                        table.reload("actionList",
+                            {
+                                url:"/AppRule/GetActionList/@Model.Id/"
+                            });
+                    });
+                return false;
+            });
+
+            table.render({
+                elem: '#operationList'
+                , height: 315
+                , url: '/AppRule/GetOperationList/@Model.Id/' //数据接口
+                , page: true //开启分页
+                , limits: [10, 20]
+                , cols: [[ //表头
+                    { field: 'Id', title: 'ID', sort: true, width: 80 }
+                    , { field: 'Field', title: '字段名', sort: true }
+                    , { field: 'Type', title: '条件', sort: true, width: 80 }
+                    , { field: 'Para', title: '条件值', sort: true }
+                    , { title: '操作', fixed: 'right', width: 180, align: 'center', toolbar:'#barDemo'}
+                ]]
+            });
+
+            table.render({
+                elem: '#actionList'
+                , height: 315
+                , url: '/AppRule/GetActionList/@Model.Id/' //数据接口
+                , page: true //开启分页
+                , limits: [10, 20]
+                , cols: [[ //表头
+                    { field: 'Id', title: 'ID', sort: true, width: 80 }
+                    , { field: 'Type', title: '动作类型', sort: true, width: 10 }
+                    , { field: 'Field', title: '字段名', sort: true }
+                    , { field: 'Para', title: '修改值', sort: true }
+                    , { title: '操作', fixed: 'right', width: 180, align: 'center', toolbar:'#barDemo'}
+                ]]
+                , done: function (res, curr, count) {
+                    $("#actionList").next().find("[data-field='Type']").css('display', 'none');
+                }
+            });
+
+            //监听operationList编辑和删除
+            table.on('tool(operationList)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'detail'){
+                    layer.msg('ID：'+ data.Id + ' 的查看操作');
+                } else if(obj.event === 'del'){
+                    layer.confirm('真的删除该Operation么', function (index) {
+                        $.post("/AppRule/DeleteOperation",
+                            {
+                                operationId: data.Id
+                            },
+                            function(editOpRet) {
+                                @*table.reload("operationList",
+                                    {
+                                        url: "/AppRule/GetOperationList/@Model.Id/"
+                                    });*@
+                                obj.del();
+                            }).always(function() {
+                            layer.close(index);
+                        });
+                    });
+                } else if(obj.event === 'edit') {
+                    //layer.alert('编辑行：<br>' + JSON.stringify(data));
+                    layer.open({
+                        type: 1,
+                        title: false,
+                        closeBtn: true,
+                        area: '300px',
+                        scrollbar: false,
+                        shade: 0.8,
+                        id: 'LAY_EditOperation',
+                        btn: ['确定'],
+                        btnAlign: 'c',
+                        moveType: 1,
+                        content: $("#layerPageEditOperation").html(),
+                        success: function (layero, index) {
+                            layero.find("#LAY_EditOperation").attr("style", "overflow:visible");
+                            layero.find("input[name='Id']").val(data.Id);
+                            layero.find("select[name='Field'] option").each(function () {
+                                if ($(this).text() == data.Field)
+                                    $(this).attr("selected", true);
+                            });
+                            layero.find("select[name='Type'] option").each(function () {
+                                if ($(this).text() == escape2Html(data.Type))
+                                    $(this).attr("selected", true);
+                            });
+                            layero.find("input[name='Para']").val(data.Para);
+                            form.render('select', "layerPageEditOperation");
+                        },
+                        yes: function (index, layero) {
+                            form.render('select', "layerPageEditOperation");
+                            var operationId = layero.find("input[name='Id']").val();
+                            var operationType = layero.find("select[name='Type']").val();
+                            var operationField = layero.find("select[name='Field']").val();
+                            var operationPara = layero.find("input[name='Para']").val();
+                            $.post("/AppRule/EditOperation",
+                                {
+                                    Id: operationId,
+                                    Type: operationType,
+                                    Field: operationField,
+                                    Para: operationPara
+                                },
+                                function(editOpRet) {
+                                    table.reload("operationList",
+                                        {
+                                            url: "/AppRule/GetOperationList/@Model.Id/"
+                                        });
+                                }).always(function() {
+                                layer.close(index);
+                            });
+                            
+                        }
+                    });
+                }
+            });
+
+            //监听actionList编辑和删除
+            table.on('tool(actionList)', function(obj){
+                var data = obj.data;
+                if(obj.event === 'detail'){
+                    layer.msg('ID：'+ data.Id + ' 的查看操作');
+                } else if(obj.event === 'del'){
+                    layer.confirm('真的删除该Action么', function (index) {
+                        $.post("/AppRule/DeleteAction",
+                            {
+                                actionId: data.Id
+                            },
+                            function(editOpRet) {
+                                table.reload("actionList",
+                                    {
+                                        url: "/AppRule/GetActionList/@Model.Id/"
+                                    });
+                                //obj.del();
+                            }).always(function() {
+                            layer.close(index);
+                        });
+                    });
+                } else if(obj.event === 'edit') {
+                    //layer.alert('编辑行：<br>' + JSON.stringify(data));
+                    layer.open({
+                        type: 1,
+                        title: false,
+                        closeBtn: true,
+                        area: '300px',
+                        scrollbar: false,
+                        shade: 0.8,
+                        id: 'LAY_EditAction',
+                        btn: ['确定'],
+                        btnAlign: 'c',
+                        moveType: 1,
+                        content: $("#layerPageEditAction").html(),
+                        success: function (layero, index) {
+                            layero.find("#LAY_EditAction").attr("style", "overflow:visible");
+                            layero.find("input[name='Id']").val(data.Id);
+                            layero.find("select[name='Field'] option").each(function () {
+                                if ($(this).text() == data.Field)
+                                    $(this).attr("selected", true);
+                            });
+                            layero.find("select[name='Type'] option").each(function () {
+                                if ($(this).text() == escape2Html(data.Type))
+                                    $(this).attr("selected", true);
+                            });
+                            layero.find("input[name='Para']").val(data.Para);
+                            //if (layero.find("select[name='Type']").val() != "1") {
+                            //    layero.find("#layerPageSelectActionField").hide();
+                            //    layero.find("#layerPageSelectActionPara").hide();
+                            //}
+                            form.render('select', "layerPageEditAction");
+                            //form.on('select(layerPageSelectActionType)', function (data) {
+                            //    if (data.value == 1) {
+                            //        layero.find("#layerPageSelectActionField").fadeIn();
+                            //        layero.find("#layerPageSelectActionPara").fadeIn();
+                            //        form.render('select', "layerPageEditAction");
+                            //    } else {
+                            //        layero.find("#layerPageSelectActionField").fadeOut();
+                            //        layero.find("#layerPageSelectActionPara").fadeOut();
+                            //        form.render('select', "layerPageEditAction");
+                            //    }
+                            //});
+                        },
+                        yes: function (index, layero) {
+                            form.render('select', "layerPageEditAction");
+                            var actionId = layero.find("input[name='Id']").val();
+                            var actionType = layero.find("select[name='Type']").val();
+                            var actionField = layero.find("select[name='Field']").val();
+                            var actionPara = layero.find("input[name='Para']").val();
+                            $.post("/AppRule/EditAction",
+                                {
+                                    Id: actionId,
+                                    Type: actionType,
+                                    Field: actionField,
+                                    Para: actionPara
+                                },
+                                function(editOpRet) {
+                                    table.reload("actionList",
+                                        {
+                                            url:"/AppRule/GetActionList/@Model.Id/"
+                                        });
+                                }).always(function() {
+                                layer.close(index);
+                            });
+                            
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
