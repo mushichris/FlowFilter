@@ -13,7 +13,7 @@ namespace FlowFilter.Models
         [Required]
         public AppOperationType Type { get; set; }
         [Required]
-        public UInt32 Para { get; set; }
+        public UInt64 Para { get; set; }
         [Required]
         public int AppRuleId { get; set; }
     }
